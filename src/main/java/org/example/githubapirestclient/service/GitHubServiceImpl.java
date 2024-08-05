@@ -1,6 +1,5 @@
 package org.example.githubapirestclient.service;
 
-import lombok.RequiredArgsConstructor;
 import org.example.githubapirestclient.exception.UserNotFoundException;
 import org.example.githubapirestclient.model.BranchInfo;
 import org.example.githubapirestclient.model.Repository;
@@ -11,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 @Service
 public class GitHubServiceImpl implements GitHubService {
@@ -33,10 +33,13 @@ public class GitHubServiceImpl implements GitHubService {
                     return Mono.error(new RuntimeException("Client error"));
                 })
                 .bodyToFlux(Repository.class)
-                .filter(repo -> !repo.isFork())
-                .flatMap(repo -> getBranches(username, repo.getName())
+                .filter(repo -> !repo.fork())
+                .parallel()
+                .runOn(Schedulers.boundedElastic())
+                .flatMap(repo -> getBranches(username, repo.name())
                         .collectList()
-                        .map(branches -> new RepoDetailsResponse(repo.getName(), repo.getOwner().getLogin(), branches)));
+                        .map(branches -> new RepoDetailsResponse(repo.name(), repo.owner().login(), branches)))
+                .sequential();
     }
 
     private Flux<BranchInfo> getBranches(String username, String repoName) {

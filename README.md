@@ -30,6 +30,5 @@ Ta aplikacja Spring Boot dostarcza API do pobierania informacji o repozytoriach 
    
 2. Wygeneruj Private Access Token na githubie i wklej go jako wartość token:
 
-## Plany na przyszłośc :
-1. Przyspieszyć wywołanie, poprzez zastosowanie ParallelFlux
+
 
